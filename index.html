@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Metal Ball Maze 3D - Ultra-Realistic Physics Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2348cae4'/><circle cx='38' cy='38' r='14' fill='%23fff' opacity='0.8'/></svg>">
+</head>
+<body>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Cinematic Start Screen -->
+  <div id="start-screen">
+    <div class="start-content glass-panel">
+      <h1 class="game-title">METAL BALL MAZE</h1>
+      <p class="game-subtitle">Find Your Way Out</p>
+      
+      <!-- Controller Connected Status -->
+      <div id="start-gamepad-badge" class="gamepad-status-badge hidden" style="margin-bottom: 12px;">
+        <span class="gamepad-dot"></span>
+        <span id="start-gamepad-name">🎮 Controller Connected</span>
+      </div>
+
+      <p class="game-description">
+        Take control of a heavy polished steel ball inside an expansive, multi-elevation industrial labyrinth.
+        Experience authentic rigid body physics, momentum, realistic metallic collisions, directional spark bursts, and dynamic rolling acoustics.
+      </p>
+
+      <!-- Ball Skin Customizer -->
+      <div class="skin-select-container">
+        <div class="level-select-title">CUSTOMIZE BALL SKIN</div>
+        <div class="skin-tabs" id="start-skin-tabs">
+          <!-- Dynamically generated skin pills -->
+        </div>
+        <div id="selected-skin-info" class="skin-card-info">
+          <!-- Active skin info -->
+        </div>
+      </div>
+
+      <!-- Level Selector on Start Screen -->
+      <div class="level-select-container">
+        <div class="level-select-title">SELECT SECTOR / LEVEL (10 SECTORS)</div>
+        <div class="level-tabs" id="start-level-tabs">
+          <!-- Dynamically generated level buttons -->
+        </div>
+        <div id="selected-level-info" class="level-card-info">
+          <!-- Level details -->
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-start-game" class="primary-btn">START SECTOR</button>
+        <button id="btn-how-to" class="secondary-btn">HOW TO PLAY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- How To Play Modal -->
+  <div id="howto-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-panel">
+      <h2 class="modal-title">MISSION BRIEFING</h2>
+      <ul class="howto-list">
+        <li>🎮 <strong>Keyboard:</strong> Use <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span> / Arrows to roll, <span class="key-badge">Space</span> to brake.</li>
+        <li>🕹️ <strong>Controller:</strong> Left Stick / D-Pad to move, Right Stick to orbit camera, <span class="key-badge">A</span> / <span class="key-badge">B</span> to brake, <span class="key-badge">Y</span> to reset.</li>
+        <li>⚖️ <strong>Heavy Momentum:</strong> Steel has weight. Build up speed on long corridors, but brake early before sharp 90° corners!</li>
+        <li>💥 <strong>Sparks & Impact:</strong> High-speed collisions produce intense metallic rings and dual-motor controller rumble.</li>
+        <li>🔄 <strong>Camera Control:</strong> Left/Right Click and Drag (or Right Stick) to look around. Mouse wheel to zoom.</li>
+        <li>⛰️ <strong>Verticality:</strong> Scale sloped ramps and traverse high-elevation catwalks over ground corridors.</li>
+        <li>🏁 <strong>Finish Beacon:</strong> Navigate to the pulsating energy portal to complete the sector.</li>
+      </ul>
+      <button id="btn-close-howto" class="primary-btn">GOT IT</button>
+    </div>
+  </div>
+
+  <!-- In-Game HUD Overlay -->
+  <div id="hud-overlay" class="hidden">
+    <!-- Top Bar -->
+    <div class="hud-top-bar">
+      <!-- Left: Timer & Distance -->
+      <div class="hud-stat-box glass-panel">
+        <div class="hud-label">TIME ELAPSED</div>
+        <div id="hud-timer" class="hud-value">00:00.00</div>
+        <div class="hud-subvalue">DISTANCE: <span id="hud-distance" style="color:#edf2f4;">0.0 m</span></div>
+      </div>
+
+      <!-- Center: Level Selector Pill & Collision Alert -->
+      <div class="hud-center-group">
+        <div class="hud-level-pill glass-panel">
+          <button id="btn-prev-level" class="level-arrow-btn" title="Previous Level">◀</button>
+          <div id="hud-level-title">LEVEL 01: PROVING GROUNDS</div>
+          <button id="btn-next-level" class="level-arrow-btn" title="Next Level">▶</button>
+        </div>
+        <div id="hud-impact-alert" class="opacity-0">COLLISION</div>
+      </div>
+
+      <!-- Right: Collisions & Speedometer & Actions -->
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <div class="hud-stat-box glass-panel">
+          <div class="hud-label">COLLISIONS</div>
+          <div id="hud-collisions" class="hud-value" style="color:#ffb703;">0</div>
+          <div class="hud-subvalue">SPEED: <span id="hud-speed" style="color:#edf2f4;">0.0 km/h</span></div>
+        </div>
+        <div class="hud-actions">
+          <button id="btn-reset-ingame" class="icon-btn" title="Reset Ball Position (R)">↺ RESET</button>
+          <button id="btn-toggle-mute" class="icon-btn" title="Toggle Audio">🔊</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="hud-bottom-bar">
+      <!-- Bottom-Left: Desktop & Controller Controls Reminder -->
+      <div class="controls-hint glass-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="hud-label">CONTROLS</div>
+          <div id="hud-gamepad-badge" class="gamepad-status-badge hidden" style="font-size:10px; padding:2px 8px;">
+            <span class="gamepad-dot"></span>
+            <span id="hud-gamepad-name">🎮 CONTROLLER</span>
+          </div>
+        </div>
+        <p><span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span> / Arrows: Move | <span class="key-badge">Space</span>: Brake | <span class="key-badge">R</span>: Reset</p>
+        <p>Mouse Drag / Right Stick: Orbit Camera | Scroll: Zoom</p>
+        <div class="controller-hint-row">
+          <span>🎮 Left Stick: Move</span> | <span>Right Stick: Camera</span> | <span>(A)/(B): Brake</span> | <span>(Y): Reset</span>
+        </div>
+      </div>
+
+      <!-- Bottom-Right: Tactical Radar -->
+      <div class="radar-box glass-panel">
+        <div class="hud-label" style="font-size:11px; margin-bottom:4px;">RADAR BEACON</div>
+        <canvas id="radar-canvas" width="110" height="110"></canvas>
+      </div>
+    </div>
+
+    <!-- Mobile Touch Controls (Analog Joystick + D-Pad) -->
+    <div id="touch-controls-container">
+      <div id="touch-joystick-zone">
+        <div id="touch-joystick-thumb"></div>
+      </div>
+      <div id="touch-dpad">
+        <div></div>
+        <button id="touch-btn-up" class="touch-btn">▲</button>
+        <div></div>
+        <button id="touch-btn-left" class="touch-btn">◀</button>
+        <div></div>
+        <button id="touch-btn-right" class="touch-btn">▶</button>
+        <div></div>
+        <button id="touch-btn-down" class="touch-btn">▼</button>
+        <div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Victory Screen Modal -->
+  <div id="victory-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-panel">
+      <h2 id="vic-title" class="modal-title" style="color:#00f5d4; font-size:32px;">MAZE COMPLETED!</h2>
+      <p id="vic-subtitle" style="color:var(--text-dim); margin-bottom:20px;">Exceptional navigation through the industrial labyrinth.</p>
+      
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="label">Total Time</div>
+          <div id="vic-time" class="value">00:00.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="label">Collisions</div>
+          <div id="vic-collisions" class="value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="label">Total Distance</div>
+          <div id="vic-distance" class="value">0.0 m</div>
+        </div>
+        <div class="stat-item">
+          <div class="label">Best Time</div>
+          <div id="vic-best-time" class="value">--:--.--</div>
+        </div>
+      </div>
+
+      <div class="btn-group" style="display:flex; gap:12px; margin-top:20px;">
+        <button id="btn-next-level-vic" class="primary-btn" style="flex:1;">NEXT LEVEL ▶</button>
+        <button id="btn-restart-victory" class="secondary-btn" style="flex:1;">RETRY SECTOR</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
